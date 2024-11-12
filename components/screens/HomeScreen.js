@@ -1,27 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, TextInput, ScrollView, FlatList, TouchableOpacity } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useSelector } from 'react-redux';
+
 {/* Font Awesome 5 */}
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faHome, faSearch, faUserCircle, faBookOpen, faBell } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 
-const HomeScreen = ({ route }) => {
-
-    const [user, setUser] = useState(null);
+const HomeScreen = () => {
 
     const [suggestions, setSuggestions] = useState([]);
-    const [loading, setLoading] = useState(true);
+
+    const user = useSelector(state => state.userData);
 
     const navigation = useNavigation();
 
     useEffect(() => {
-      async function getUserData() {
-        const userData = await AsyncStorage.getItem('userData');
-        setUser(JSON.parse(userData));
-      }
-      getUserData();
+      // async function getUserData() {
+      //   const userData = await AsyncStorage.getItem('userData');
+      //   setUser(JSON.parse(userData));
+      // }
+      // getUserData();
 
       const fetchSuggestions = async () => {
         try {
@@ -30,7 +31,7 @@ const HomeScreen = ({ route }) => {
         } catch (error) {
           console.error(error);
         } finally {
-          setLoading(false);
+          //setLoading(false);
         }
       };
       fetchSuggestions();
@@ -92,12 +93,8 @@ const HomeScreen = ({ route }) => {
         );
       };
 
-    if (loading) {
-      return <Text>Loading...</Text>;
-    }
-
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             { user ? (
                 <>
         <View style={styles.header}>
@@ -185,7 +182,7 @@ const HomeScreen = ({ route }) => {
         ) : (
             <Text>Loading...</Text>
         )}
-        </View>
+        </SafeAreaView>
             
     );
 };

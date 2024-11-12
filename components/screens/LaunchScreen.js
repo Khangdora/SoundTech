@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { View, ImageBackground, Text, StyleSheet, TouchableOpacity, Image, Modal, TextInput, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useDispatch } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function LaunchScreen ({ setIsLoggedIn }) {
+export default function LaunchScreen ({ navigation }) {
+
+    const dispatch = useDispatch();
 
     const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
     const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
@@ -17,7 +21,6 @@ export default function LaunchScreen ({ setIsLoggedIn }) {
 
     {/* Các biến dùng toàn cục */}
     const [user, setUser] = useState(null);
-    const navigation = useNavigation(); // Khai báo navigation
   
     const handleCreateAccountPress = () => {
       setIsRegisterModalVisible(true);
@@ -102,9 +105,13 @@ export default function LaunchScreen ({ setIsLoggedIn }) {
             if (response.success) {
                 
                 console.log('Đăng nhập thành công:', response.data);
-                await storeUserData(response.data);
-                setIsLoggedIn(true);
-                navigation.navigate('Home', { user: response.data });
+
+                await AsyncStorage.setItem('userToken', JSON.stringify(response.data));
+
+                dispatch({ type: 'SET_LOGIN', payload: true });
+                dispatch({ type: 'SET_USER_DATA', payload: response.data });
+
+                navigation.navigate('Home');
                 setIsLoginModalVisible(false);
             } else {
                 showAlert({ content: response.message });
@@ -114,15 +121,6 @@ export default function LaunchScreen ({ setIsLoggedIn }) {
             
         }
     };
-
-    const storeUserData = async (userData) => {
-        try {
-          await AsyncStorage.setItem('userData', JSON.stringify(userData));
-          setUser(userData);
-        } catch (error) {
-          console.error('Lỗi khi lưu thông tin người dùng:', error);
-        }
-      };
 
     {/* Hàm gửi yêu cầu đăng nhập */}
     const login = async (username, password) => {
@@ -195,7 +193,7 @@ export default function LaunchScreen ({ setIsLoggedIn }) {
       };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ImageBackground
         source={require('../../assets/images/background-launch.png')}
         style={styles.background}
@@ -292,7 +290,7 @@ export default function LaunchScreen ({ setIsLoggedIn }) {
         </Modal>
 
       </ImageBackground>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -382,6 +380,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     width: '100%',
     height: '100%',
+    bottom: 0,
     alignContent: 'center'
   },
   modalTitle: {
