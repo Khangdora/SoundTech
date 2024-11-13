@@ -2,18 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, TextInput, ScrollView, FlatList, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 
 {/* Font Awesome 5 */}
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faHome, faSearch, faUserCircle, faBookOpen, faBell } from '@fortawesome/free-solid-svg-icons';
+import { faHome, faSearch, faUserCircle, faBookOpen, faBell, faHeart, faPause, faPlay } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
+
+import { setPaused } from '../tools/actions';
 
 const HomeScreen = () => {
 
     const [suggestions, setSuggestions] = useState([]);
+    const [albums, setAlbums] = useState([]);
+    const [artists, setArtists] = useState([]);
 
     const user = useSelector(state => state.userData);
+
+    const dispatch = useDispatch();
+    const currentSong = useSelector((state) => state.currentSong);
+    const isPaused = useSelector((state) => state.isPaused);
+    const duration = useSelector((state) => state.duration);
+    const position = useSelector((state) => state.position);
+
+    const [loading, setLoading] = useState(true);
 
     const navigation = useNavigation();
 
@@ -31,10 +43,37 @@ const HomeScreen = () => {
         } catch (error) {
           console.error(error);
         } finally {
-          //setLoading(false);
+          setLoading(false);
         }
       };
+
       fetchSuggestions();
+
+      const fetchAlbums = async () => {
+        try {
+          const response = await axios.get('https://fimflex.com/api/soundtech/albumtrending');
+          setAlbums(response.data);
+        } catch (error) {
+          console.error(error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchAlbums();
+
+      const fetchArtist = async () => {
+        try {
+          const response = await axios.get('https://fimflex.com/api/soundtech/artisttrending');
+          setArtists(response.data);
+        } catch (error) {
+          console.error(error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchArtist();
 
     }, []);
 
@@ -92,6 +131,44 @@ const HomeScreen = () => {
             </TouchableOpacity>
         );
       };
+
+      const AlbumsCard = ({ item }) => {
+        return (
+            <TouchableOpacity style={styles.containerChartsCard}>
+                <Image source={{ uri: item.thumbnail }} style={styles.imageChartsCard} />
+                <Text style={styles.titleAlbumsCard}>{item.title}</Text>
+                <Text style={styles.artistAlbumCard}>
+                      {item.artists_info.map((artist) => artist.name).join(', ')}
+                </Text>
+            </TouchableOpacity>
+        );
+      };
+
+      const ArtistCard = ({ item }) => {
+        return (
+            <TouchableOpacity style={styles.containerChartsCard}>
+                <Image source={{ uri: item.avatar }} style={styles.imageArtistCard} />
+                <View style={styles.containerArtistCard}>
+                  <Text style={styles.titleArtistCard}>{item.name}</Text>
+                  <TouchableOpacity style={styles.btnFollow}>
+                    <Text style={styles.btnFollowText}>Theo dõi</Text>
+                  </TouchableOpacity>
+                </View>
+            </TouchableOpacity>
+        );
+      };
+
+    const handlePlayPausePress = () => {
+      dispatch(setPaused(!isPaused));
+    };
+
+    if(loading) {
+      return (
+        <SafeAreaView style={styles.container}>
+          <Text>Loading...</Text>
+        </SafeAreaView>
+      )
+    }
 
     return (
         <SafeAreaView style={styles.container}>
@@ -158,7 +235,71 @@ const HomeScreen = () => {
                     />
             </View>
 
+            {/* Albums đề cử */}
+            <View style={styles.content}>
+                <View style={styles.titleContent}>
+                  <Text style={styles.titleHome}>Album đề cử</Text>
+                  <Text style={styles.moreHome}>Xem thêm</Text>
+                </View>
+                <FlatList
+                    data={albums}
+                    keyExtractor={(item) => item.id}
+                    renderItem={AlbumsCard}
+                    contentContainerStyle={styles.containerCard}
+                    horizontal={true}
+                    showsHorizontalScrollIndicator={false}
+                    />
+            </View>
+
+            {/* Nghệ sĩ đề cử */}
+            <View style={styles.content}>
+                <View style={styles.titleContent}>
+                  <Text style={styles.titleHome}>Nghệ sĩ đề cử</Text>
+                  <Text style={styles.moreHome}>Xem thêm</Text>
+                </View>
+                <FlatList
+                    data={artists}
+                    keyExtractor={(item) => item.id}
+                    renderItem={ArtistCard}
+                    contentContainerStyle={styles.containerCard}
+                    horizontal={true}
+                    showsHorizontalScrollIndicator={false}
+                    />
+            </View>
+
         </ScrollView>
+
+        { currentSong!=null ? (
+          <>
+          
+          <View style={styles.songContainer}>
+            <View style={styles.songLeft}>
+              <Image source={{uri: currentSong.thumbnail}} style={styles.thumbnailSong} />
+              <View style={styles.songInfomation}>
+                <Text style={styles.songTitle} onPress={() => handleSongPress(currentSong)}>{currentSong.title}</Text>
+                <Text style={styles.songArtist}>{currentSong.artists_info.map((artist) => artist.name).join(', ')}</Text>
+              </View>
+            </View>
+            <View style={styles.songRight}>
+              <TouchableOpacity
+                  style={styles.controlButton}
+              >
+                  <FontAwesomeIcon icon={faHeart} style={styles.controlIcon} size={15} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.controlButtonMain} onPress={handlePlayPausePress}>
+                  {isPaused ? (
+                      <FontAwesomeIcon icon={faPlay} style={styles.controlIcon} size={23} />
+                  ):(
+                      <FontAwesomeIcon icon={faPause} style={styles.controlIcon} size={23} />
+                  )}
+              </TouchableOpacity>
+            </View>
+          </View>
+          </>
+        ):(
+          <>
+          </>
+        ) }
             
         <View style={styles.footer}>
             <View style={styles.footerItem}>
@@ -224,6 +365,14 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderTopWidth: 1,
     borderTopColor: '#f2f2f2',
+  },
+  songContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    display: 'flex',
+    backgroundColor: '#222',
+    height: 70
   },
   footerItem: {
     alignItems: 'center',
@@ -337,7 +486,6 @@ const styles = StyleSheet.create({
   },
   containerChartsCard: {
     flexDirection: 'row',
-    alignItems: 'center',
     borderRadius: 8,
     marginVertical: 8,
     marginHorizontal: 8,
@@ -387,6 +535,90 @@ const styles = StyleSheet.create({
     color: '#333',
     marginHorizontal: 16,
     marginVertical: 8,
+  },
+  titleAlbumsCard: {
+    fontSize: 14,
+    color: '#000',
+    fontWeight: 'bold',
+    paddingLeft: 8,
+    paddingTop: 8
+  },
+  artistAlbumCard: {
+    fontSize: 12,
+    color: '#333',
+    paddingLeft: 8,
+  },
+  imageArtistCard: {
+    width: 150,
+    height: 150,
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  containerArtistCard: {
+    flex: 1,
+    direction: 'column',
+    justifyContent: 'space-between',
+    display: 'flex',
+  },
+  titleArtistCard: {
+    fontSize: 13,
+    color: '#333',
+    padding: 8,
+    alignContent: 'center',
+    alignSelf: 'center',
+  },
+  btnFollow: {
+    backgroundColor: '#000',
+    padding: 4,
+    borderRadius: 20,
+    marginVertical: 'auto',
+    width: 70,
+    alignSelf: 'center',
+  },
+  btnFollowText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontSize: 10,
+  },
+  thumbnailSong: {
+    height: 50,
+    width: 50,
+    borderRadius: 10,
+    marginHorizontal: 16,
+  },
+  songLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    display: 'flex',
+  },
+  songRight: {
+    flexDirection: 'row',
+    marginLeft: 'auto',
+    alignContent: 'center',
+    alignItems: 'center',
+    gap: 15,
+    marginRight: 16,
+  },
+  songInfomation: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  songTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#fff',
+    width: '70%',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  songArtist: {
+    fontSize: 12,
+    color: '#ccc',
+  },
+  controlIcon: {
+    color: '#fff',
   }
 });
 
