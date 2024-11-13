@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TextInput, ScrollView, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TextInput, ScrollView, FlatList, TouchableOpacity, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useSelector, useDispatch } from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 {/* Font Awesome 5 */}
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
@@ -16,6 +17,7 @@ const HomeScreen = () => {
     const [suggestions, setSuggestions] = useState([]);
     const [albums, setAlbums] = useState([]);
     const [artists, setArtists] = useState([]);
+    const [charts, setCharts] = useState([]);
 
     const user = useSelector(state => state.userData);
 
@@ -25,6 +27,7 @@ const HomeScreen = () => {
     const duration = useSelector((state) => state.duration);
     const position = useSelector((state) => state.position);
 
+    const [showModal, setShowModal] = useState(false);
     const [loading, setLoading] = useState(true);
 
     const navigation = useNavigation();
@@ -75,35 +78,34 @@ const HomeScreen = () => {
 
       fetchArtist();
 
+      const fetchCharts = async () => {
+        try {
+          const response = await axios.get('https://fimflex.com/api/soundtech/chart');
+          setCharts(response.data);
+        } catch (error) {
+          console.error(error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchCharts();
+
     }, []);
 
     const handleSongPress = (song) => {
       navigation.navigate('Song', { song });
     };
 
-      const charts = [
-        {
-          id: '1',
-          image: 'https://via.placeholder.com/100',
-          top: '50',
-          name: 'Canada',
-          title: 'Bảng xếp hạng hàng ngày'
-        },
-        {
-          id: '2',
-          image: 'https://via.placeholder.com/100',
-          top: '50',
-          name: 'Vietnam',
-          title: 'Bảng xếp hạng hàng ngày'
-        },
-        {
-          id: '3',
-          image: 'https://via.placeholder.com/100',
-          top: '50',
-          name: 'Canada',
-          title: 'Bảng xếp hạng hàng ngày'
-        }
-      ];
+    const handleAlbumPress = (album) => {
+      navigation.navigate('Album', { album });
+    };
+
+    const handleChartPress = (chart) => {
+      navigation.navigate('Chart', { chart });
+    }
+
+    
 
     const SuggestionsCard = ({ item }) => {
         return (
@@ -119,22 +121,22 @@ const HomeScreen = () => {
         );
       };
     
-      const ChartsCard = ({ image, top, name, title }) => {
+      const ChartsCard = ({ item }) => {
         return (
-            <TouchableOpacity style={styles.containerChartsCard}>
-                <Image source={{ uri: image }} style={styles.imageChartsCard} />
-                <View style={styles.contentChartsCard}>
+            <TouchableOpacity style={styles.chartsItem} onPress={()=>handleChartPress(item)}>
+                <Image source={{ uri: item.thumbnail }} style={styles.imageChartsCard} />
+                {/* <View style={styles.contentChartsCard}>
                     <Text style={styles.topChartsCard}>{top}</Text>
                     <Text style={styles.nameChartsCard}>{name}</Text>
-                </View>
-                <Text style={styles.titleChartsCard}>{title}</Text>
+                </View> */}
+                <Text style={styles.titleChartsCard}>{item.title}</Text>
             </TouchableOpacity>
         );
       };
 
       const AlbumsCard = ({ item }) => {
         return (
-            <TouchableOpacity style={styles.containerChartsCard}>
+            <TouchableOpacity style={styles.containerChartsCard} onPress={() => handleAlbumPress(item)}>
                 <Image source={{ uri: item.thumbnail }} style={styles.imageChartsCard} />
                 <Text style={styles.titleAlbumsCard}>{item.title}</Text>
                 <Text style={styles.artistAlbumCard}>
@@ -162,6 +164,21 @@ const HomeScreen = () => {
       dispatch(setPaused(!isPaused));
     };
 
+    const toggleModal = () => {
+      setShowModal(!showModal);
+    };
+  
+    const handleMenuItemPress = (item) => {
+      console.log(`Chọn mục: ${item}`);
+      if(item=='Đăng xuất') {
+        AsyncStorage.removeItem('userData');
+        AsyncStorage.removeItem('userToken');
+        dispatch({ type: 'SET_LOGIN', payload: false });
+        dispatch({ type: 'SET_USER_DATA', payload: null });
+      }
+      toggleModal();
+    };
+
     if(loading) {
       return (
         <SafeAreaView style={styles.container}>
@@ -180,7 +197,9 @@ const HomeScreen = () => {
             </View>
             <View style={styles.rightSection}>
                 <FontAwesomeIcon icon={faBell} style={styles.bellIcon} />
-                <Image source={{ uri: user.avatar }} style={styles.avatar} />
+                <TouchableOpacity onPress={toggleModal}>
+                  <Image source={{ uri: user.avatar }} style={styles.avatar} />
+                </TouchableOpacity>
             </View>
         </View>
         
@@ -221,14 +240,7 @@ const HomeScreen = () => {
                 <FlatList
                     data={charts}
                     keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => (
-                      <ChartsCard
-                        image={item.image}
-                        top={item.top}
-                        name={item.name}
-                        title={item.title}
-                      />
-                    )}
+                    renderItem={ChartsCard}
                     contentContainerStyle={styles.containerCard}
                     horizontal={true}
                     showsHorizontalScrollIndicator={false}
@@ -300,6 +312,36 @@ const HomeScreen = () => {
           <>
           </>
         ) }
+
+<Modal
+        visible={showModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={toggleModal}
+      >
+        <View style={styles.modalContainer}>
+          <TouchableOpacity onPress={toggleModal}>
+            <Text style={styles.menuItemText}>Đóng</Text>
+          </TouchableOpacity>
+          <View style={styles.modalContent}>
+            <TouchableOpacity onPress={() => handleMenuItemPress('Thông tin tài khoản')} style={styles.menuItem}>
+              <Text style={styles.menuItemText}>Thông tin tài khoản</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleMenuItemPress('Sửa tài khoản')} style={styles.menuItem}>
+              <Text style={styles.menuItemText}>Sửa tài khoản</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleMenuItemPress('Đổi mật khẩu')} style={styles.menuItem}>
+              <Text style={styles.menuItemText}>Đổi mật khẩu</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleMenuItemPress('Cài đặt')} style={styles.menuItem}>
+              <Text style={styles.menuItemText}>Cài đặt</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleMenuItemPress('Đăng xuất')} style={styles.menuItem}>
+              <Text style={styles.menuItemText}>Đăng xuất</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
             
         <View style={styles.footer}>
             <View style={styles.footerItem}>
@@ -491,6 +533,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
     flexDirection: 'column',
   },
+  chartsItem: {
+    flexDirection: 'row',
+    borderRadius: 8,
+    marginVertical: 8,
+    marginHorizontal: 8,
+    flexDirection: 'column',
+    width: 160,
+  },
   imageChartsCard: {
     width: 150,
     height: 150,
@@ -608,7 +658,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: '#fff',
-    width: '70%',
+    width: '100%',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
@@ -619,7 +669,28 @@ const styles = StyleSheet.create({
   },
   controlIcon: {
     color: '#fff',
-  }
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  },
+  modalContent: {
+    backgroundColor: 'transparent',
+    borderRadius: 5,
+    padding: 16,
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  menuItem: {
+    paddingVertical: 20,
+  },
+  menuItemText: {
+    alignSelf: 'center',
+    fontSize: 15,
+    color: '#fff',
+  },
 });
 
 export default HomeScreen;

@@ -20,7 +20,7 @@ const AlbumScreen = ({ route }) => {
     const duration = useSelector((state) => state.duration);
     const position = useSelector((state) => state.position);
 
-    const { album } = route.params;
+    const { chart } = route.params;
 
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -32,7 +32,7 @@ const AlbumScreen = ({ route }) => {
 
         fetchAlbumData = async () => {
             try {
-                const response = await axios.get(`https://fimflex.com/api/soundtech/album/${album.id}`);
+                const response = await axios.get(`https://fimflex.com/api/soundtech/chart/${chart.id}`);
                 setData(response.data);
             } catch (error) {
                 console.error('Error fetching album data:', error);
@@ -90,10 +90,10 @@ const AlbumScreen = ({ route }) => {
 
             <View style={styles.containerAlbum}>
                 <View style={styles.albumLeft}>
-                    <Image source={{ uri: album.thumbnail }} style={styles.image} />
+                    <Image source={{ uri: chart.thumbnail }} style={styles.image} />
                 </View>
                 <View style={styles.albumRight}>
-                    <Text style={styles.title}>{album.title}</Text>
+                    <Text style={styles.title}>{chart.title}</Text>
                     <View style={styles.infomation}>
                         <Text style={styles.heartAlbum}>
                             435
@@ -103,7 +103,6 @@ const AlbumScreen = ({ route }) => {
                             2:00:00
                         </Text>
                     </View>
-                    <Text style={styles.artist}>{album.artists_info.map((artist) => artist.name).join(', ')}</Text>
                 </View>
             </View>
             <View style={styles.toolAlbum}>
@@ -226,7 +225,6 @@ const styles = StyleSheet.create({
     },
     infomation: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
         gap: 10
     },

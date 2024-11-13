@@ -10,6 +10,8 @@ import LaunchScreen from './components/screens/LaunchScreen';
 import HomeScreen from './components/screens/HomeScreen';
 import SongScreen from './components/screens/SongScreen';
 import AudioPlayer from './components/screens/AudioPlayer';
+import AlbumScreen from './components/screens/AlbumScreen';
+import ChartScreen from './components/screens/ChartScreen';
 
 {/* Context */}
 import { AudioProvider } from './components/orthers/AudioContext';
@@ -51,6 +53,14 @@ const AppNavigator = () => {
                 <Stack.Screen 
                     name="Song" 
                     component={SongScreen} 
+                    options={{ headerShown: false }}  />
+                <Stack.Screen 
+                    name="Album" 
+                    component={AlbumScreen} 
+                    options={{ headerShown: false }}  />
+                <Stack.Screen 
+                    name="Chart" 
+                    component={ChartScreen} 
                     options={{ headerShown: false }}  />
             </>
         ) : (
