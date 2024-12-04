@@ -163,25 +163,6 @@ const AlbumScreen = ({ route }) => {
           <>
           </>
         ) }
-
-        <View style={styles.footer}>
-            <View style={styles.footerItem}>
-                <FontAwesomeIcon icon={faHome} style={[styles.footerIcon, styles.footerIconActive]} />
-                <Text style={[styles.footerText,styles.footerIconActive]}>Trang chủ</Text>
-            </View>
-            <View style={styles.footerItem}>
-                <FontAwesomeIcon icon={faSearch} style={styles.footerIcon} />
-                <Text style={styles.footerText}>Tìm kiếm</Text>
-            </View>
-            <View style={styles.footerItem}>
-                <FontAwesomeIcon icon={faUserCircle} style={styles.footerIcon} />
-                <Text style={styles.footerText}>Feed</Text>
-            </View>
-            <View style={styles.footerItem}>
-                <FontAwesomeIcon icon={faBookOpen} style={styles.footerIcon} />
-                <Text style={styles.footerText}>Thư viện</Text>
-            </View>
-        </View>
             
         </SafeAreaView>
     )
@@ -311,16 +292,21 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        display: 'flex',
         backgroundColor: '#222',
-        height: 70
+        height: 70,
+        paddingHorizontal: 10,
+        position: 'absolute', // Đặt vị trí tuyệt đối để ghim ở dưới cùng
+        bottom: 0,
+        left: 0,
+        right: 0, // Đảm bảo chiếm toàn bộ chiều ngang
+        elevation: 5, // Thêm độ bóng cho container
     },
     thumbnailSong: {
         height: 50,
         width: 50,
         borderRadius: 10,
-        marginHorizontal: 16,
-      },
+        marginRight: 16,
+    },
       songLeft: {
         flexDirection: 'row',
         alignItems: 'center',

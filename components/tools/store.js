@@ -3,7 +3,7 @@ import { SET_CURRENT_SONG, SET_PAUSED, SET_DURATION, SET_POSITION } from './acti
 
 const initialState = {
     currentSong: null,
-    isPaused: false,
+    isPaused: false
 }
 
 const reducer = (state = initialState, action) => {

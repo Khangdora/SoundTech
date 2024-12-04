@@ -39,6 +39,7 @@ const AudioPlayer = () => {
                 // Tải âm thanh mới
                 await soundRef.current.loadAsync({ uri: currentSong.url_play });
                 console.log("Loaded sound", currentSong.url_play);
+                console.log("Test", currentSong);
                 const status = await soundRef.current.getStatusAsync();
                 console.log("Set duration:", status.durationMillis);
                 dispatch(setDuration(status.durationMillis)); // Cập nhật thời lượng

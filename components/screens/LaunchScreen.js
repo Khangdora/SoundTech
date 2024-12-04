@@ -192,6 +192,10 @@ export default function LaunchScreen ({ navigation }) {
         );
       };
 
+
+    const backgroundSource = require('../../assets/images/background-launch.png');
+    const iconSource = require('../../assets/images/sound-icon.png');
+
   return (
     <SafeAreaView style={styles.container}>
       <ImageBackground
